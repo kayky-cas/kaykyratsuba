@@ -62,7 +62,7 @@ fn sub_str(n1: &str, n2: &str) -> String {
 }
 
 pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
-    let mut max = x.max(y).len();
+    let mut max = x.len().max(y.len());
 
     if max < 2 {
         let x: usize = x.parse().unwrap_or(0);
@@ -88,8 +88,8 @@ pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
 
     let half = max / 2;
 
-    let (x1, x2) = x.split_at(half);
-    let (y1, y2) = y.split_at(half);
+    let (x1, x2) = &x.split_at(half);
+    let (y1, y2) = &y.split_at(half);
 
     let mut a = karatsuba(x1, y1);
     let b = karatsuba(&add_str(x1, x2), &add_str(y1, y2));
@@ -97,8 +97,8 @@ pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
 
     let mut meiuca = sub_str(&b, &add_str(&a, &c));
 
-    a.push_str(&"0".repeat(max));
-    meiuca.push_str(&"0".repeat(half));
+    a += &"0".repeat(max);
+    meiuca += &"0".repeat(half);
 
     add_str(&add_str(&a, &meiuca), &c)
 }
@@ -142,11 +142,17 @@ mod tests {
     }
 
     #[test]
+    fn test_karatsuba_3() {
+        assert_eq!("10000", karatsuba("500", "20"));
+    }
+
+    #[test]
     fn test_karatsuba_final() {
-        let max: u128 = u128::MAX.sqrt();
+        let max = u16::MAX.sqrt();
 
         for x in 0..max {
             for y in 0..max {
+                dbg!(x, y);
                 assert_eq!(
                     (x * y).to_string(),
                     karatsuba(&x.to_string(), &y.to_string())
