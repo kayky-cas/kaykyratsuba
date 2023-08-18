@@ -1,6 +1,6 @@
 fn add_str(n1: &str, n2: &str) -> String {
-    let mut add = String::new();
-    let mut overflow = 0;
+    let mut result = String::new();
+    let mut carry = 0;
     let mut n1: Vec<char> = n1.chars().collect();
     let mut n2: Vec<char> = n2.chars().collect();
 
@@ -10,33 +10,30 @@ fn add_str(n1: &str, n2: &str) -> String {
         let first: u8 = n1.pop().unwrap_or('0') as u8 - b'0';
         let second: u8 = n2.pop().unwrap_or('0') as u8 - b'0';
 
-        let mut sum: String = (first + second + overflow)
-            .to_string()
-            .chars()
-            .rev()
-            .collect();
+        let mut sum: String = (first + second + carry).to_string().chars().rev().collect();
 
-        overflow = if sum.len() > 1 {
+        carry = if sum.len() > 1 {
             sum.pop().unwrap() as u8 - b'0'
         } else {
             0
         };
 
-        add.push(sum.chars().nth(0).unwrap());
+        result.push(sum.chars().nth(0).unwrap());
     }
 
-    if overflow > 0 {
-        add.push(overflow.to_string().chars().nth(0).unwrap());
+    if carry > 0 {
+        result.push(carry.to_string().chars().nth(0).unwrap());
     }
 
-    add.chars()
+    result
+        .chars()
         .rev()
-        .skip_while(|&x| add.len() != 1 && x == '0')
+        .skip_while(|&x| result.len() != 1 && x == '0')
         .collect()
 }
 
 fn sub_str(n1: &str, n2: &str) -> String {
-    let mut sub = String::new();
+    let mut result = String::new();
     let mut carry = 0;
     let mut n1: Vec<char> = n1.chars().collect();
     let mut n2: Vec<char> = n2.chars().collect();
@@ -44,32 +41,38 @@ fn sub_str(n1: &str, n2: &str) -> String {
     for _ in 0..n1.len() {
         let first = (n1.pop().unwrap_or('0') as u8 - b'0') as i8;
         let second = (n2.pop().unwrap_or('0') as u8 - b'0') as i8;
-        let mut curr = first - second - carry;
 
-        if curr < 0 {
-            curr += 10;
-            carry = 1;
+        let mut sub = first - second - carry;
+
+        carry = if sub < 0 {
+            sub += 10;
+            1
         } else {
-            carry = 0;
-        }
+            0
+        };
 
-        sub.push_str(&curr.to_string());
+        result.push_str(&sub.to_string());
     }
 
-    sub.chars()
+    result
+        .chars()
         .rev()
-        .skip_while(|&x| sub.len() != 1 && x == '0')
+        .skip_while(|&x| result.len() != 1 && x == '0')
         .collect()
 }
 
 pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
-    let max = x.max(y).len();
+    let mut max = x.max(y).len();
 
     if max < 2 {
         let x: usize = x.parse().unwrap_or(0);
         let y: usize = y.parse().unwrap_or(0);
 
         return (x * y).to_string();
+    }
+
+    if max % 2 != 0 {
+        max += 1;
     }
 
     let mut x = x.to_owned();
