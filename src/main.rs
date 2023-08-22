@@ -8,9 +8,8 @@ fn main() {
     }
 
     let stopwatch = std::time::Instant::now();
-    println!(
-        "{}\n{:?}",
-        kaykyratsuba::karatsuba(&args[1], &args[2]),
-        stopwatch.elapsed()
-    );
+    let result = kaykyratsuba::karatsuba(&args[1], &args[2]);
+    let elapsed = stopwatch.elapsed();
+
+    println!("{}\n{:?}", result, elapsed);
 }

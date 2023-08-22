@@ -25,53 +25,30 @@ fn add_str(n1: &str, n2: &str) -> String {
         result.push(carry.to_string().chars().nth(0).unwrap());
     }
 
-    result
+    let res: String = result
         .chars()
         .rev()
         .skip_while(|&x| result.len() != 1 && x == '0')
-        .collect()
-}
+        .collect();
 
-fn sub_str(n1: &str, n2: &str) -> String {
-    let mut result = String::new();
-    let mut carry = 0;
-    let mut n1: Vec<char> = n1.chars().collect();
-    let mut n2: Vec<char> = n2.chars().collect();
-
-    for _ in 0..n1.len() {
-        let first = (n1.pop().unwrap_or('0') as u8 - b'0') as i8;
-        let second = (n2.pop().unwrap_or('0') as u8 - b'0') as i8;
-
-        let mut sub = first - second - carry;
-
-        carry = if sub < 0 {
-            sub += 10;
-            1
-        } else {
-            0
-        };
-
-        result.push_str(&sub.to_string());
+    if res.is_empty() {
+        "0".to_owned()
+    } else {
+        res
     }
-
-    result
-        .chars()
-        .rev()
-        .skip_while(|&x| result.len() != 1 && x == '0')
-        .collect()
 }
 
 pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
     let mut max = x.len().max(y.len());
 
     if max < 2 {
-        let x: usize = x.parse().unwrap_or(0);
-        let y: usize = y.parse().unwrap_or(0);
+        let x = x.parse().unwrap_or(0);
+        let y = y.parse().unwrap_or(0);
 
         return (x * y).to_string();
     }
 
-    if max % 2 != 0 {
+    while max % 3 != 0 {
         max += 1;
     }
 
@@ -86,32 +63,38 @@ pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
         y = "0".repeat(max - y.len()) + &y;
     }
 
-    let half = max / 2;
+    let tird = max / 3;
 
-    let (x1, x2) = &x.split_at(half);
-    let (y1, y2) = &y.split_at(half);
+    let x: Vec<String> = x
+        .chars()
+        .collect::<Vec<char>>()
+        .chunks(tird)
+        .map(|x| x.iter().collect::<String>())
+        .collect();
 
-    let mut a = karatsuba(x1, y1);
-    let b = karatsuba(&add_str(x1, x2), &add_str(y1, y2));
-    let c = karatsuba(x2, y2);
+    let y: Vec<String> = y
+        .chars()
+        .collect::<Vec<char>>()
+        .chunks(tird)
+        .map(|x| x.iter().collect::<String>())
+        .collect();
 
-    let mut meiuca = sub_str(&b, &add_str(&a, &c));
+    let mut result = String::new();
 
-    a += &"0".repeat(max);
-    meiuca += &"0".repeat(half);
+    for i in 0..3 {
+        for j in 0..3 {
+            let tmp = karatsuba(&x[i], &y[j]) + &"0".repeat(tird * (4 - i - j));
+            result = add_str(&result, &tmp);
+        }
+    }
 
-    add_str(&add_str(&a, &meiuca), &c)
+    result
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{add_str, karatsuba, sub_str};
+    use crate::{add_str, karatsuba};
     use num::integer::Roots;
-
-    #[test]
-    fn test_sub_str() {
-        assert_eq!("90", sub_str("100", "10"));
-    }
 
     #[test]
     fn test_add_str() {
@@ -148,7 +131,7 @@ mod tests {
 
     #[test]
     fn test_karatsuba_final() {
-        let max = u16::MAX.sqrt();
+        let max = u8::MAX.sqrt();
 
         for x in 0..max {
             for y in 0..max {
