@@ -11,5 +11,5 @@ fn main() {
     let result = kaykyratsuba::karatsuba(&args[1], &args[2]);
     let elapsed = stopwatch.elapsed();
 
-    println!("{}\n{:?}", result, elapsed);
+    println!("\n{}\n{:?}", result, elapsed);
 }

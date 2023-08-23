@@ -25,11 +25,7 @@ fn add_str(n1: &str, n2: &str) -> String {
         result.push(carry.to_string().chars().nth(0).unwrap());
     }
 
-    let res: String = result
-        .chars()
-        .rev()
-        .skip_while(|&x| result.len() != 1 && x == '0')
-        .collect();
+    let res: String = result.chars().rev().skip_while(|&x| x == '0').collect();
 
     if res.is_empty() {
         "0".to_owned()
@@ -39,6 +35,10 @@ fn add_str(n1: &str, n2: &str) -> String {
 }
 
 pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
+    if x.chars().all(|x| x == '0') || y.chars().all(|x| x == '0') {
+        return "0".to_owned();
+    }
+
     let mut max = x.len().max(y.len());
 
     if max < 2 {
@@ -83,8 +83,8 @@ pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
 
     for i in 0..3 {
         for j in 0..3 {
-            let tmp = karatsuba(&x[i], &y[j]) + &"0".repeat(tird * (4 - i - j));
-            result = add_str(&result, &tmp);
+            let curr = karatsuba(&x[i], &y[j]) + &"0".repeat(tird * (4 - i - j));
+            result = add_str(&result, &curr);
         }
     }
 
