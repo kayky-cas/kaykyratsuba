@@ -1,12 +1,11 @@
 fn add_str(n1: &str, n2: &str) -> String {
-    let mut result = String::new();
-    let mut carry = 0;
     let mut n1: Vec<char> = n1.chars().collect();
     let mut n2: Vec<char> = n2.chars().collect();
 
-    let max = n1.len().max(n2.len());
+    let mut carry = 0;
+    let mut result = String::new();
 
-    for _ in 0..max {
+    while !n1.is_empty() || !n2.is_empty() {
         let first: u8 = n1.pop().unwrap_or('0') as u8 - b'0';
         let second: u8 = n2.pop().unwrap_or('0') as u8 - b'0';
 
@@ -18,20 +17,27 @@ fn add_str(n1: &str, n2: &str) -> String {
             0
         };
 
-        result.push(sum.chars().nth(0).unwrap());
+        result.push(sum.chars().next().unwrap());
     }
 
     if carry > 0 {
-        result.push(carry.to_string().chars().nth(0).unwrap());
+        result.push(carry.to_string().chars().next().unwrap());
     }
 
-    let res: String = result.chars().rev().skip_while(|&x| x == '0').collect();
+    let result: String = result.chars().rev().skip_while(|&x| x == '0').collect();
 
-    if res.is_empty() {
+    if result.is_empty() {
         "0".to_owned()
     } else {
-        res
+        result
     }
+}
+
+#[macro_export]
+macro_rules! shift_decimal {
+    ($x:expr) => {
+        "0".repeat($x)
+    };
 }
 
 pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
@@ -42,8 +48,8 @@ pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
     let mut max = x.len().max(y.len());
 
     if max < 2 {
-        let x = x.parse().unwrap_or(0);
-        let y = y.parse().unwrap_or(0);
+        let x = x.chars().next().unwrap_or('0') as u8 - b'0';
+        let y = y.chars().next().unwrap_or('0') as u8 - b'0';
 
         return (x * y).to_string();
     }
@@ -52,16 +58,17 @@ pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
         max += 1;
     }
 
-    let mut x = x.to_owned();
-    let mut y = y.to_owned();
+    let x = if x.len() < max {
+        shift_decimal!(max - x.len()) + x
+    } else {
+        x.to_owned()
+    };
 
-    if x.len() < max {
-        x = "0".repeat(max - x.len()) + &x;
-    }
-
-    if y.len() < max {
-        y = "0".repeat(max - y.len()) + &y;
-    }
+    let y = if y.len() < max {
+        shift_decimal!(max - y.len()) + y
+    } else {
+        y.to_owned()
+    };
 
     let tird = max / 3;
 
@@ -83,7 +90,7 @@ pub fn karatsuba<'a>(x: &'a str, y: &'a str) -> String {
 
     for i in 0..3 {
         for j in 0..3 {
-            let curr = karatsuba(&x[i], &y[j]) + &"0".repeat(tird * (4 - i - j));
+            let curr = karatsuba(&x[i], &y[j]) + &shift_decimal!(tird * (4 - i - j));
             result = add_str(&result, &curr);
         }
     }
@@ -131,11 +138,10 @@ mod tests {
 
     #[test]
     fn test_karatsuba_final() {
-        let max = u8::MAX.sqrt();
+        let max = 1000000.sqrt();
 
         for x in 0..max {
             for y in 0..max {
-                dbg!(x, y);
                 assert_eq!(
                     (x * y).to_string(),
                     karatsuba(&x.to_string(), &y.to_string())
